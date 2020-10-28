@@ -1,0 +1,33 @@
+version: "3"
+
+volumes:
+  code:
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CODE_DIR}
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - database
+    ports:
+      - "3333:3333"
+    entrypoint: ["/env/wait-for-it.sh", "database:3306", "--"]
+    # Start server and watch for code changes
+    command: ["tail", "-f", "/tmp/out"]
+    volumes:
+      - code:/root/code
+
+  database:
+    image: mysql:5.6
+    environment: 
+      - MYSQL_DATABASE=devdb
+      - MYSQL_USER=admin
+      - MYSQL_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+    ports:
+      - "3306:3306"
